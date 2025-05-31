@@ -43,7 +43,7 @@ def showHist():
     if not calcHist:
         print("\nNo history.\n")
         return
-    
+
     print("\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
     for i, histEntry in enumerate(calcHist, 1):
         print(f"{i}. {histEntry['timestamp']} - {histEntry['op']}")
@@ -61,40 +61,40 @@ while True:
     command = input("\nWhat do you want to do?\n").lower()
     time = np.arange(0, 10.1, 0.1)
     initial_money = money
-    
+
     if(command == "help"):
         print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, showhist, exit")
-    
+
     elif(command == "add"):
         value = float(input("\nHow much?\n"))
         money += value
 
-        addHist("add", initial_money, {"added: value"}, money)
+        addHist("add", initial_money, {"added": value}, money)
         print(f"${round(money, 2)}")
 
     elif(command == "subtract"):
         value = float(input("\nHow much?\n"))
-        
+
         money -= value
-        addHist("sub", initial_money, {"sub: value", money})
+        addHist("subtract", initial_money, {"subtracted": value}, money)
         print(f"${round(money, 2)}")
 
     elif(command == "multiply"):
         value = float(input("\nHow much?\n"))
-        
+
         money *= value  
-        addHist(initial_money, {"multiplied by": value}, money)
+        addHist("multiply", initial_money, {"multiplied by": value}, money)
         print(f"${round(money, 2)}")
-        
+
     elif(command == "divide"):
         value = float(input("\nHow much?\n"))
         if value == 0:
             print("err: cannot divide by 0\n")
         else:
             money /= value
-            addHist(initial_money, {"divided by:": value}, money)
+            addHist("divide", initial_money, {"divided by": value}, money)
             print(f"${round(money, 2)}")
-    
+
     elif(command == "compound"):
         rate = float(input("\nWhat is your annual compounded interest rate?\n"))
         periods = int(input("\nHow many times is your interest compounded in a year?\n"))
@@ -116,7 +116,7 @@ while True:
         growth = money * np.power(1 + rate, time)
         money = round(money * np.power((1 + rate), time[-1]), 2)
         print(f"${money}")
-        addHist("interest", initial_money, {"rate": rate, "years": years}, growth)
+        addHist("interest", initial_money, {"rate": rate, "years": years}, money)
         plt.plot(time, growth)
         plt.show()
 
@@ -130,7 +130,7 @@ while True:
         addHist("decay", initial_money, {"rate": rate, "years": years}, money)
         plt.plot(time, decay)
         plt.show()
-    
+
     elif(command == "continuous"):
         rate = float(input("\nWhat is your annual continuous interest rate?\n"))
         years = int(input("\nFor how many years?\n"))
@@ -145,36 +145,35 @@ while True:
         money2 = float(input("\nWhat is the starting value of the second slope?\n"))
         rate1 = float(input("\nWhat is the rate of the first slope?\n"))
         rate2 = float(input("\nWhat is the rate of the second slope?\n"))
-        
+
         if(rate2 == rate1):
             print('None')
-            
+
         else:
             equation1 = money + rate1 * time
             equation2 = money2 + rate2 * time
             point = (money - money2)/(rate2 - rate1)
             print(str(round(point, 2)) + ", " + str(round(point * rate1), 2))
-            addHist("break-even:", initial_money, {
-                "money2": money2, "rate1": rate1, "rate2": rate2,
-                "point": point,
-                "final": money,
-            })
+            addHist("break-even", initial_money, {
+                "money2": money2, "rate1": rate1, "rate2": rate2
+            }, f"Point: ({round(point, 2)}, {round(point * rate1, 2)})")
             plt.plot(time, equation1)
             plt.plot(time, equation2)
             plt.show()
-    
+
     elif(command == "new"):
         money = float(input("\nHow much money do you have?\n"))
-        addHist("new money value", initial_money, {"changed: value"}, money)
+        addHist("new money value", initial_money, {"changed to": money}, money)
 
     elif(command == "showhist"):
         showHist()
 
     elif(command == "exit"):
-        addHist("exited.")
+        addHist("exit", money, {}, "Session ended")
         break
-    
+
     else:
         print('err: invalid')
-    
+
     print('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
+#.

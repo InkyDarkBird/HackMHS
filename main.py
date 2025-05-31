@@ -59,7 +59,7 @@ while True:
     initial_money = money
     
     if(command == "help"):
-        print("All commands: add, subtract, divide, multiply, interest, decay, compound, continuous, break-even, new, exit")
+        print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, exit")
     
     elif(command == "add"):
         value = float(input("\nHow much?\n"))

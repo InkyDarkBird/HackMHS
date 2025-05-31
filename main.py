@@ -36,15 +36,15 @@ def saveSesh(money):
         "history": calcHist,
         "timestamp": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
-    with open("file.txt", "w") as f:
-        f.write("Created using write mode.")
+    with open("file.txt", "w") as file:
+        file.write(calcHist)
 
 def showHist():
     if not calcHist:
         print("\nNo history.\n")
         return
     
-    print("\n-----------------------")
+    print("\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
     for i, histEntry in enumerate(calcHist, 1):
         print(f"{i}. {histEntry['timestamp']} - {histEntry['op']}")
         print(f"  init: ${histEntry['initial_value']}")
@@ -53,13 +53,17 @@ def showHist():
 
 money = float(input("\nHow much money do you have?\n"))
 
+history = input("Do you want to input your previous history?\n").lower()
+if(history == "yes"):
+    file = open("file.txt", "r")
+
 while True:
     command = input("\nWhat do you want to do?\n").lower()
     time = np.arange(0, 10.1, 0.1)
     initial_money = money
     
     if(command == "help"):
-        print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, exit")
+        print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, showhist, exit")
     
     elif(command == "add"):
         value = float(input("\nHow much?\n"))
@@ -97,23 +101,34 @@ while True:
         years = int(input("\nFor how many years?\n"))
         time = np.arange(0, years + 1/periods, 1/periods)
         growth = money * np.power((1 + rate / periods), (time * periods))
-        print(f"${round(money * np.power(1 + rate / periods, time[-1] * periods), 2)}")
-        addHist("compound")
+        money = round(money * np.power(1 + rate / periods, time[-1] * periods), 2)
+        print(f"${money}")
+        addHist("compound:", initial_money, {
+            "rate": rate, "periods:": periods, "years": years
+        }, money)
         plt.plot(time, growth)
         plt.show()
 
     elif(command == "interest"):
         rate = float(input("\nWhat is the annual interest rate?\n"))
+        years = int(input("\nFor how many years?\n"))
+        time = np.arange(0, years + 0.1, 0.1)
         growth = money * np.power(1 + rate, time)
-        print(f"${round(money * np.power((1 + rate), time[-1]), 2)}")
+        money = round(money * np.power((1 + rate), time[-1]), 2)
+        print(f"${money}")
+        addHist("interest", initial_money, {"rate": rate, "years": years}, growth)
         plt.plot(time, growth)
         plt.show()
 
     elif(command == "decay"):
         rate = float(input("\nWhat is the annual decay rate?\n"))
-        growth = money * np.power(1 + rate, -time)
-        print(f"${round(money * np.power((1 + rate), -time[-1]), 2)}")
-        plt.plot(time, growth)
+        years = int(input("\nFor how many years?"))
+        time = np.arange(0, years + 0.1, 0.1)
+        decay = money * np.power(1 - rate, time)
+        money = round(money * np.power((1 - rate), time[-1]), 2)
+        print(f"${money}")
+        addHist("decay", initial_money, {"rate": rate, "years": years}, money)
+        plt.plot(time, decay)
         plt.show()
     
     elif(command == "continuous"):
@@ -121,7 +136,8 @@ while True:
         years = int(input("\nFor how many years?\n"))
         time = np.arange(0, years + 0.1, 0.1)
         growth = money * np.exp(rate * time)
-        print(f"${round(money * np.exp(rate * time[-1]), 2)}")
+        money = round(money * np.exp(rate * time[-1]), 2)
+        print(f"${money}")
         plt.plot(time, growth)
         plt.show()
 
@@ -138,13 +154,21 @@ while True:
             equation2 = money2 + rate2 * time
             point = (money - money2)/(rate2 - rate1)
             print(str(round(point, 2)) + ", " + str(round(point * rate1), 2))
+            addHist("break-even:", initial_money, {
+                "money2": money2, "rate1": rate1, "rate2": rate2,
+                "point": point,
+                "final": money,
+            })
             plt.plot(time, equation1)
             plt.plot(time, equation2)
             plt.show()
     
     elif(command == "new"):
         money = float(input("\nHow much money do you have?\n"))
-        addHist("new", initial_money, {"changed: value"}, money)
+        addHist("new money value", initial_money, {"changed: value"}, money)
+
+    elif(command == "showhist"):
+        showHist()
 
     elif(command == "exit"):
         addHist("exited.")

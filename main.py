@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime as dt # https://docs.python.org/3/library/datetime.html
-import json
 import os
 import csv
 
@@ -16,6 +15,7 @@ $$   ____|$$ |      $$ |  $$ |$$ |  $$ |$$ |  $$ |$$ | $$ | $$ |$$ |    $$  __$$
  \_______| \_______| \______/ \__|  \__| \______/ \__| \__| \__| \_______\_______|\__| \_______|
 """)
 
+money = 0
 calcHist = []
 sessionFilepath = ""
 historyFilepath = ""
@@ -30,15 +30,6 @@ def addHist(op, initial_value, parameters, result):
     }
     calcHist.append(histEntry)
 
-def saveSesh(money):
-    session_data = {
-        "money": money,
-        "history": calcHist,
-        "timestamp": dt.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    with open("file.txt", "w") as file:
-        file.write(calcHist)
-
 def showHist():
     if not calcHist:
         print("\nNo history.\n")
@@ -51,11 +42,62 @@ def showHist():
         print(f"  param: ${histEntry['parameters']}")
         print(f"  result: ${histEntry['result']}\n")
 
-money = float(input("\nHow much money do you have?\n"))
+def exportHistToCSV(filename="calc_history.csv"):
+    if not calcHist:
+        print("\nNo history to export.\n")
+        return
+    
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['timestamp', 'operation', 'initial_value', 'parameters', 'result']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        writer.writeheader()
+        for entry in calcHist:
+            writer.writerow({
+                'timestamp': entry['timestamp'],
+                'operation': entry['op'],
+                'initial_value': entry['initial_value'],
+                'parameters': str(entry['parameters']),
+                'result': entry['result']
+            })
+    print(f"\nHistory exported to {filename}\n")
 
-history = input("Do you want to input your previous history?\n").lower()
-if(history == "yes"):
-    file = open("file.txt", "r")
+def importHistFromCSV(filename="calc_history.csv"):
+    global calcHist
+    global money
+    if not os.path.exists(filename):
+        print(f"\nFile {filename} not found.\n")
+        return
+    
+    try:
+        with open(filename, 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            imported_hist = []
+            
+            for row in reader:
+                # Convert parameters string back to dict
+                try:
+                    parameters = eval(row['parameters'])
+                except:
+                    parameters = {}
+                
+                entry = {
+                    'timestamp': row['timestamp'],
+                    'op': row['operation'],
+                    'initial_value': float(row['initial_value']),
+                    'parameters': parameters,
+                    'result': row['result']
+                }
+                money = float(row['result'])
+                imported_hist.append(entry)
+            
+            calcHist.extend(imported_hist)
+            print(f"\nImported {len(imported_hist)} history entries from {filename}\n")
+    
+    except Exception as e:
+        print(f"\nError importing CSV: {e}\n")
+
+money = float(input("\nHow much money do you have?\n"))
 
 while True:
     command = input("\nWhat do you want to do?\n").lower()
@@ -63,7 +105,7 @@ while True:
     initial_money = money
 
     if(command == "help"):
-        print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, showhist, exit")
+        print("All commands: add, subtract, multiply, divide, interest, decay, compound, continuous, break-even, new, showhist, export, import, recent, exit")
 
     elif(command == "add"):
         value = float(input("\nHow much?\n"))
@@ -154,9 +196,6 @@ while True:
             equation2 = money2 + rate2 * time
             point = (money - money2)/(rate2 - rate1)
             print(str(round(point, 2)) + ", " + str(round(point * rate1), 2))
-            addHist("break-even", initial_money, {
-                "money2": money2, "rate1": rate1, "rate2": rate2
-            }, f"Point: ({round(point, 2)}, {round(point * rate1, 2)})")
             plt.plot(time, equation1)
             plt.plot(time, equation2)
             plt.show()
@@ -168,6 +207,18 @@ while True:
     elif(command == "showhist"):
         showHist()
 
+    elif(command == "export"):
+        filename = input("\nEnter filename (or press Enter for 'calc_history.csv'): ").strip()
+        if not filename:
+            filename = "calc_history.csv"
+        exportHistToCSV(filename)
+
+    elif(command == "import"):
+        filename = input("\nEnter filename to import (or press Enter for 'calc_history.csv'): ").strip()
+        if not filename:
+            filename = "calc_history.csv"
+        importHistFromCSV(filename)
+    
     elif(command == "exit"):
         addHist("exit", money, {}, "Session ended")
         break
@@ -176,4 +227,4 @@ while True:
         print('err: invalid')
 
     print('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
-#.
+    
